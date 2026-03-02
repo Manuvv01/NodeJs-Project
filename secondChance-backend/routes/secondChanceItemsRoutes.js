@@ -83,6 +83,7 @@ router.get('/:id', async (req, res, next) => {
         //Step 4: task 2 - insert code here
         const collection = db.collection("secondChanceItems");
         //Step 4: task 3 - insert code here
+        const id = parseInt(req.params.id);
         const secondChanceItem = await collection.findOne({ id: id });
         //Step 4: task 4 - insert code here
         if (!secondChanceItem) {
@@ -103,6 +104,7 @@ router.put('/:id', async(req, res,next) => {
         //Step 5: task 2 - insert code here
         const collection = db.collection("secondChanceItems");
         //Step 5: task 3 - insert code here
+        const id = parseInt(req.params.id);
         const secondChanceItem = await collection.findOne({ id });
 
         if (!secondChanceItem) {
@@ -142,6 +144,7 @@ router.delete('/:id', async(req, res,next) => {
         //Step 6: task 2 - insert code here
         const collection = db.collection("secondChanceItems");
         //Step 6: task 3 - insert code here
+        const id = parseInt(req.params.id);
         const secondChanceItem = await collection.findOne({ id });
         
         if (!secondChanceItem) {

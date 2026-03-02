@@ -55,7 +55,7 @@ app.use('/api/secondchance/items', secondChanceItemsRoutes);
 // Global Error Handler
 app.use((err, req, res, next) => {
     console.error(err);
-    res.status(500).send('Internal Server Error');
+    res.status(500).send('\nInternal Server Error');
 });
 
 app.get("/",(req,res)=>{
