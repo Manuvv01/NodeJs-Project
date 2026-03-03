@@ -43,33 +43,36 @@ router.get('/', async (req, res, next) => {
 // Add a new item
 router.post('/', upload.single('image'), async (req, res, next) => {
     try {
-       
-        const db = await connectToDatabase();
 
-        
+        const db = await connectToDatabase();
         const collection = db.collection('secondChanceItems');
 
+        let secondChanceItem = req.body;
+
+        // Get last item to increment ID
+        const lastItem = await collection
+        .find()
+        .sort({ id: -1 })
+        .limit(1)
+        .toArray();
         
-        const newItem = { ...req.body };
+        const lastId = lastItem.length ? Number(lastItem[0].id) : 0;
+        secondChanceItem.id = lastId + 1;
 
-        
-        const lastItem = await collection.find().sort({ id: -1 }).limit(1).toArray();
-        const lastId = lastItem.length ? lastItem[0].id : 0;
-        newItem.id = lastId + 1;
+        // Add created date
+        secondChanceItem.date_added = new Date();
 
-        
-        newItem.createdAt = new Date();
+        // Insert into database
+        const result = await collection.insertOne(secondChanceItem);
 
-       
-        const result = await collection.insertOne(newItem);
-
-  
+        // If image uploaded
         if (req.file) {
-            newItem.imagePath = path.join(directoryPath, req.file.filename);
+            secondChanceItem.imagePath = path.join(directoryPath, req.file.filename);
         }
 
-        // Return the newly created item
-        res.status(201).json(result.ops ? result.ops[0] : newItem);
+        // Return created item
+        res.status(201).json(secondChanceItem);
+
     } catch (e) {
         next(e);
     }
@@ -98,12 +101,14 @@ router.get('/:id', async (req, res, next) => {
 
 // Update and existing item
 router.put('/:id', async(req, res,next) => {
-    try {
-        //Step 5: task 1 - insert code here
+        try {
+        // Task 1: Retrieve DB connection
         const db = await connectToDatabase();
-        //Step 5: task 2 - insert code here
+
+        // Task 2: Retrieve collection
         const collection = db.collection("secondChanceItems");
-        //Step 5: task 3 - insert code here
+
+        // Task 3: Check if item exists
         const id = parseInt(req.params.id);
         const secondChanceItem = await collection.findOne({ id });
 
@@ -111,26 +116,26 @@ router.put('/:id', async(req, res,next) => {
             logger.error('secondChanceItem not found');
             return res.status(404).json({ error: "secondChanceItem not found" });
         }
-        //Step 5: task 4 - insert code here
-        secondChanceItem.category = req.body.category;
-        secondChanceItem.condition = req.body.condition;
-        secondChanceItem.age_days = req.body.age_days;
-        secondChanceItem.description = req.body.description;
-        secondChanceItem.age_years = Number((secondChanceItem.age_days/365).toFixed(1));
-        secondChanceItem.updatedAt = new Date();
 
-        const updatepreloveItem = await collection.findOneAndUpdate(
+        // Task 4: Update attributes
+        const updatedFields = {
+            category: req.body.category,
+            condition: req.body.condition,
+            age_days: req.body.age_days,
+            description: req.body.description,
+            age_years: Number((req.body.age_days / 365).toFixed(1)),
+            updatedAt: new Date()
+        };
+
+        await collection.findOneAndUpdate(
             { id },
-            { $set: secondChanceItem },
+            { $set: updatedFields },
             { returnDocument: 'after' }
         );
-        //Step 5: task 5 - insert code here
-        plaintext
-        if(updatepreloveItem) {
-            res.json({"uploaded":"success"});
-        } else {
-            res.json({"uploaded":"failed"});
-        }
+
+        // Task 5: Send confirmation
+        res.json({ message: "secondChanceItem updated successfully" });
+
     } catch (e) {
         next(e);
     }
